@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kubesmrt/pkg/auth"
 	"kubesmrt/pkg/render"
+	"kubesmrt/pkg/utils"
 	"os"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,14 +45,14 @@ func main() {
 	render.SimpleTable(headers, footer, data)
 
 	// Save the full node data to a JSON file
-	// nodeData, err := json.MarshalIndent(nodes, "", "  ")
-	// if err != nil {
-	// 	fmt.Println("Error marshalling nodes data to JSON:", err)
-	// 	return
-	// }
+	nodeData, err := json.MarshalIndent(nodes, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling nodes data to JSON:", err)
+		return
+	}
 
 	// Output all the nodes data to a JSON file named "nodes_data.json"
-	// render.SaveOutputToJson(nodeData, "nodes_data")
+	utils.SaveOutputToJson(nodeData, "nodes_data")
 
 	fmt.Println("Node data saved to nodes_data.json")
 }
