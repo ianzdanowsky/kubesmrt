@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"kubesmrt/cmd/get"
+	"kubesmrt/cmd/run"
 	"kubesmrt/cmd/setup"
 
 	"github.com/spf13/cobra"
@@ -26,4 +27,5 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(setup.SetupCmd)
 	rootCmd.AddCommand(get.GetCmd)
+	rootCmd.AddCommand(run.RunCmd)
 }

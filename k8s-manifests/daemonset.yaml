@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alpine-sleeper
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: alpine-sleeper
+  template:
+    metadata:
+      labels:
+        app: alpine-sleeper
+    spec:
+      containers:
+      - name: sleeper
+        image: alpine
+        command: ["sleep", "infinity"]
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+      terminationGracePeriodSeconds: 30

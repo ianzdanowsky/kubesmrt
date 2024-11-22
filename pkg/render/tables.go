@@ -6,10 +6,12 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func SimpleTable(headers []string, data [][]string) {
+func SimpleTable(headers []string, footers []string, data [][]string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(headers)
-
+	if len(footers) > 0 {
+		table.SetFooter(footers)
+	}
 	for _, v := range data {
 		table.Append(v)
 	}
