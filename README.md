@@ -92,7 +92,7 @@ import (
 
 func main() {
 	var kubeconfigFilePath string
-	clientset, err := utils.GetKubeApiAuth(kubeconfigFilePath)
+	clientset, err := auth.GetKubeApiAuth(kubeconfigFilePath)
 	if err != nil {
 		fmt.Println("Failed to get kubeapi auth:", err)
 		os.Exit(1)
@@ -108,6 +108,7 @@ func main() {
 	// Prepare data for table output
 	headers := []string{"Node Name", "Ready"}
 	var data [][]string
+	var footer []string
 	for _, node := range nodes.Items {
 		nodeName := node.Name
 		for _, condition := range node.Status.Conditions {
@@ -119,7 +120,7 @@ func main() {
 
 	// Render the node data in table format
 	fmt.Println("Node Information:")
-	utils.RenderSimpleTableOutput(headers, data)
+	render.SimpleTable(headers, footer, data)
 
 	// Save the full node data to a JSON file
 	nodeData, err := json.MarshalIndent(nodes, "", "  ")
@@ -138,36 +139,21 @@ func main() {
 ### Folder Structure
 The project follows a logical structure to separate CLI commands, utilities, and core functionalities:
 
-```
-.
+```bash
 ├── cmd
-│   ├── get
-│   │   ├── commands.go          # Implements the "get" command logic
-│   │   └── pods
-│   │       ├── commands.go      # Implements "get pods" subcommand logic
-│   │       ├── functions.go     # Core functions for querying pods and resources
-│   │       ├── functions_test.go# Unit tests for the pods functions
-│   │       └── mocks.go         # Mocks for unit testing
-│   ├── root.go                  # Entry point for root command setup
-│   └── setup
-│       ├── commands.go          # Implements the "setup" command logic
-│       └── functions.go         # Helper functions for setting up kubeconfig
-├── go.mod                        # Go module file
-├── go.sum                        # Go dependencies
-├── main.go                       # Main entry point for the CLI
-├── README.md                     # Project README file
-├── sandbox                       # A place for experimental code
-│   └── sandbox.go                # Experimental code for future features
-└── utils
-    ├── auth.go                   # Authentication helpers for kubeconfig
-    ├── debug.go                  # Debugging utilities
-    └── render.go                 # Utilities for rendering table output in the CLI
+│   ├── get                     # Logic for the "get" commands
+│   ├── root.go                 # Entry point for root command setup
+│   ├── run                     # Logic for the "run" commands
+│   └── setup                   # Logic for the "setup" command
+├── k8s-manifests               # Kubernetes manifest files used for testing
+├── pkg                         # Package directory for reusable code
+│   ├── auth                    # Authentication helpers for kubeconfig
+│   ├── docs                    # Documentation-related utilities
+│   ├── mocks                   # Mocks for unit testing
+│   ├── render                  # Utilities for rendering table output in the CLI
+│   └── utils                   # General utility functions
+└── sandbox                     # Experimental code and testing ground
 ```
-
-#### Explanation of Key Folders:
-- `cmd/`: Contains all command-related code. Each command is broken into its own subfolder for clarity.
-- `utils/`: Contains shared utility functions such as rendering tables and handling kubeconfig authentication.
-- `sandbox/`: A folder for experimental or in-development features.
 
 #### Key Packages Used
 1. Cobra: A powerful library used to create CLI applications in Go.
@@ -181,11 +167,58 @@ The project follows a logical structure to separate CLI commands, utilities, and
 #### Contributing
 Contributions are welcome! Please submit pull requests with a description of your changes and any relevant tests. If you're adding new commands or features, ensure they are accompanied by adequate documentation and unit tests.
 
+#### Creating a command
+
+This guide outlines the structure and steps for creating a new command in the kubesmrt CLI tool. Follow these conventions to ensure consistency and maintainability.
+
+Every command should follow the below structure:
+
+```bash
+cmd/<parent_command>/<subcommand>/
+├── cmd.go          # Implements the Cobra command - defines the command name.
+├── func.go         # Contains the main logic for the command, ideally one function.
+├── func_test.go    # Unit tests for the main function in `func.go`
+├── utils.go        # Helper/side functions specific to this command
+└── utils_test.go   # Unit tests for the helper functions
+```
+
+The `cmd.go` file will use the `func init()` method to set up flags, retrieve their values, and pass them as arguments to the main function in `func.go`. See example below:
+
+The `func.go` itself, should ideally have one meaningful function (e.g., getPodsNoLimits) and should not deal with user input parsing or Cobra-specific details.
+
+cmd.go
+```bash
+var namespaceFlag string
+
+func init() {
+	NoLimitsCmd.Flags().StringVarP(&namespaceFlag, "namespace", "n", "default", "Namespace to filter pods")
+}
+
+var NoLimitsCmd = &cobra.Command{
+	Use:   "nolimits",
+	Short: "Get pods with no resource limits set",
+	Run: func(cmd *cobra.Command, args []string) {
+		err := getPodsNoLimits(namespaceFlag)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+	},
+}
+```
+
+func.go
+```bash
+func getPodsNoLimits(namespace string) error {
+	// Main logic to fetch and display pods with no resource limits
+	fmt.Printf("Fetching pods with no limits in namespace: %s\n", namespace)
+	// Implement functionality here
+	return nil
+}
+```
+
 #### To Do:
 1 - Create a k8s-templates directory to add k8s resource yaml that will support the command testing.
-2 - Add namespace to existing command
 3 - Create a constant file (constants.go) to keep all the tables titles and others.
-4 - Add docs package to README
 
 #### License
 This project is licensed under the MIT License. See the LICENSE file for more details.
